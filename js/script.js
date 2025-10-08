@@ -764,7 +764,7 @@ function clearHistory() {
     historyManager.clearHistory();
 }
 
-// CSV template download
+// CSV template download - FIXED VERSION
 function downloadCSVTemplate() {
     const template = `Date,Pair1,Pair2,Pair3,Pair4
 2020-01-06,Alice & Bob,Charlie & Dana
@@ -788,6 +788,8 @@ function downloadCSVTemplate() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    
+    return false; // This prevents the default link behavior
 }
 
 // Initialize when page loads
