@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pairing Manager - Hovey-Tech.com</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-people-arrows"></i> Hovey-Tech Pairing Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text" id="lastSaved"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <ul class="nav nav-tabs" id="mainTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#participants" data-bs-toggle="tab">
+                    <i class="fas fa-users"></i> Participants
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#pairing" data-bs-toggle="tab">
+                    <i class="fas fa-random"></i> Pairing
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#history" data-bs-toggle="tab">
+                    <i class="fas fa-history"></i> History
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <!-- Participants Tab -->
+            <div class="tab-pane fade show active" id="participants">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5><i class="fas fa-user-plus"></i> Add Participant</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="participantForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Name *</label>
+                                        <input type="text" class="form-control" id="participantName" required 
+                                               placeholder="Enter full name">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="participantEmail" 
+                                               placeholder="optional@email.com">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Location</label>
+                                        <input type="text" class="form-control" id="participantLocation" 
+                                               placeholder="Office, City, etc.">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Role Preference</label>
+                                        <select class="form-select" id="participantCategory">
+                                            <option value="Both">Both (Can Coach or Be Coached)</option>
+                                            <option value="Coach Only">Coach Only</option>
+                                            <option value="Coachee Only">Coachee Only</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Do Not Pair With</label>
+                                        <select class="form-select" id="exclusionSelect" multiple size="3">
+                                            <!-- Options will be populated by JavaScript -->
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl/Cmd to select multiple people</small>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-save"></i> Save Participant
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearParticipantForm()">
+                                            <i class="fas fa-times"></i> Clear Form
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions Card -->
+                        <div class="card mt-3">
+                            <div class="card-header bg-light">
+                                <h6><i class="fas fa-bolt"></i> Quick Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="importFromCSV()">
+                                    <i class="fas fa-file-import"></i> Import CSV
+                                </button>
+                                <button class="btn btn-outline-success btn-sm w-100 mb-2" onclick="exportToCSV()">
+                                    <i class="fas fa-file-export"></i> Export CSV
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm w-100" onclick="clearAllData()">
+                                    <i class="fas fa-trash"></i> Clear All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5><i class="fas fa-list"></i> Current Participants</h5>
+                                <span class="badge bg-primary" id="participantCount">0 participants</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="participantsTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Location</th>
+                                                <th>Role</th>
+                                                <th>Exclusions</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pairing Tab -->
+            <div class="tab-pane fade" id="pairing">
+                <div class="row">
+                    <div class="col-lg-3">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5><i class="fas fa-cogs"></i> Configuration</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Location Preference</label>
+                                    <select class="form-select" id="locationPreference">
+                                        <option value="Ignore">Ignore Location</option>
+                                        <option value="Same">Prefer Same Location</option>
+                                        <option value="Different">Prefer Different Locations</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Session Name</label>
+                                    <input type="text" class="form-control" id="sessionName" 
+                                           value="Pairing Session">
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="respectExclusions" checked>
+                                    <label class="form-check-label">Respect "Do Not Pair" restrictions</label>
+                                </div>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="generatePairings()">
+                                        <i class="fas fa-cogs"></i> Generate Pairings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-9">
+                        <div class="card">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5><i class="fas fa-list-ol"></i> Pairing Results</h5>
+                                <div id="pairingActions" style="display: none;">
+                                    <button class="btn btn-success btn-sm" onclick="savePairings()">
+                                        <i class="fas fa-save"></i> Save to History
+                                    </button>
+                                    <button class="btn btn-info btn-sm" onclick="exportPairingsCSV()">
+                                        <i class="fas fa-download"></i> Export CSV
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="pairingResults">
+                                    <p class="text-muted text-center py-5">
+                                        <i class="fas fa-random fa-3x mb-3"></i><br>
+                                        Configure settings and click "Generate Pairings" to see results here.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div class="tab-pane fade" id="history">
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-history"></i> Pairing History</h5>
+                        <button class="btn btn-outline-danger btn-sm" onclick="clearHistory()">
+                            <i class="fas fa-trash"></i> Clear History
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="historyContent">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-3">
+        <div class="container text-center">
+            <small>Pairing Manager &copy; 2024 Hovey-Tech.com | Data is stored locally in your browser</small>
+        </div>
+    </footer>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/pairing.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
