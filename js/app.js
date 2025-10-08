@@ -216,4 +216,208 @@ class PairingManagerApp {
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-primary">Coach</span>
-                                <span class="badge bg-success">Coachee</span
+                                <span class="badge bg-success">Coachee</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        html += `</div>`;
+
+        if (warnings && warnings.length > 0) {
+            html += `
+                <div class="alert alert-warning mt-3">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Notes:</h6>
+                    <ul class="mb-0">
+                        ${warnings.map(warning => `<li>${this.escapeHtml(warning)}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        resultsDiv.innerHTML = html;
+    }
+
+    savePairings() {
+        const sessionName = document.getElementById('sessionName').value || 'Pairing Session';
+        const locationPreference = document.getElementById('locationPreference').value;
+        
+        const sessionData = {
+            name: sessionName,
+            pairings: this.currentPairings,
+            locationPreference: locationPreference,
+            participantCount: appStorage.getParticipants().length
+        };
+
+        if (appStorage.savePairingSession(sessionData)) {
+            this.showAlert('Pairings saved to history!', 'success');
+            this.loadHistory();
+        } else {
+            this.showAlert('Error saving pairings', 'danger');
+        }
+    }
+
+    // History management
+    loadHistory() {
+        const history = appStorage.getPairingHistory();
+        const historyContent = document.getElementById('historyContent');
+        
+        if (history.length === 0) {
+            historyContent.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-history fa-3x mb-3"></i>
+                    <p>No pairing history yet.<br>Generate and save pairings to see them here.</p>
+                </div>
+            `;
+            return;
+        }
+
+        historyContent.innerHTML = history.map(session => `
+            <div class="history-session">
+                <div class="history-session-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">${this.escapeHtml(session.name)}</h6>
+                        <small class="text-muted">${new Date(session.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <small class="text-muted">
+                        ${session.pairings.filter(p => p.coachee !== 'UNPAIRED').length} pairs | 
+                        Location: ${session.locationPreference}
+                    </small>
+                </div>
+                <div class="history-pairings">
+                    ${session.pairings.map((pairing, index) => `
+                        <div class="history-pairing">
+                            <strong>${index + 1}.</strong> 
+                            ${this.escapeHtml(pairing.coach.name)} 
+                            <i class="fas fa-arrow-right mx-1 text-muted small"></i>
+                            ${pairing.coachee === 'UNPAIRED' ? 
+                              '<span class="text-danger">UNPAIRED</span>' : 
+                              this.escapeHtml(pairing.coachee.name)}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    clearHistory() {
+        if (confirm('Are you sure you want to clear all pairing history? This cannot be undone.')) {
+            if (appStorage.clearHistory()) {
+                this.showAlert('History cleared successfully!', 'success');
+                this.loadHistory();
+            } else {
+                this.showAlert('Error clearing history', 'danger');
+            }
+        }
+    }
+
+    // Export functionality
+    exportPairingsCSV() {
+        const sessionName = document.getElementById('sessionName').value || 'Pairing Session';
+        const date = new Date().toISOString().split('T')[0];
+        
+        let csvContent = 'data:text/csv;charset=utf-8,';
+        csvContent += 'Pairing Session,Coach Name,Coach Email,Coach Location,Coachee Name,Coachee Email,Coachee Location\n';
+        
+        this.currentPairings.forEach((pairing, index) => {
+            if (pairing.coachee === 'UNPAIRED') {
+                csvContent += `${sessionName},"${pairing.coach.name}","${pairing.coach.email || ''}","${pairing.coach.location || ''}",UNPAIRED,,\n`;
+            } else {
+                csvContent += `${sessionName},"${pairing.coach.name}","${pairing.coach.email || ''}","${pairing.coach.location || ''}","${pairing.coachee.name}","${pairing.coachee.email || ''}","${pairing.coachee.location || ''}"\n`;
+            }
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `pairings-${date}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Utility functions
+    escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 80px; right: 20px; z-index: 1050; min-width: 300px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.parentNode.removeChild(alertDiv);
+            }
+        }, 5000);
+    }
+
+    clearParticipantForm() {
+        document.getElementById('participantForm').reset();
+        delete document.getElementById('participantForm').dataset.editingId;
+        document.querySelector('#participantForm button[type="submit"]').textContent = 'Save Participant';
+        document.getElementById('exclusionSelect').selectedIndex = -1;
+    }
+}
+
+// Global functions for HTML onclick handlers
+function clearParticipantForm() {
+    app.clearParticipantForm();
+}
+
+function generatePairings() {
+    app.generatePairings();
+}
+
+function savePairings() {
+    app.savePairings();
+}
+
+function exportPairingsCSV() {
+    app.exportPairingsCSV();
+}
+
+function clearHistory() {
+    app.clearHistory();
+}
+
+function importFromCSV() {
+    alert('CSV import feature would be implemented here');
+}
+
+function exportToCSV() {
+    alert('CSV export feature would be implemented here');
+}
+
+function clearAllData() {
+    if (confirm('Are you sure you want to clear ALL data? This will delete all participants and history permanently.')) {
+        if (appStorage.clearAllData()) {
+            app.showAlert('All data cleared successfully!', 'success');
+            app.loadParticipantsTable();
+            app.loadHistory();
+        } else {
+            app.showAlert('Error clearing data', 'danger');
+        }
+    }
+}
+
+// Initialize the application when the page loads
+let app;
+document.addEventListener('DOMContentLoaded', function() {
+    app = new PairingManagerApp();
+});
