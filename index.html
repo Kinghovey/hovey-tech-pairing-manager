@@ -3,235 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pairing Manager - Hovey-Tech.com</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <title>Hovey Tech Pairing Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .pairs-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .pair {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            border-left: 4px solid #3498db;
+        }
+        
+        .history-section {
+            margin-top: 40px;
+        }
+        
+        .history-controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .history-controls input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .history-entry {
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .history-entry h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .history-pairs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .history-pair {
+            background: #e8f4fd;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            border: 1px solid #3498db;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .frequent-pairs {
+            margin-top: 15px;
+        }
+        
+        .frequent-pair {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 20px;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-people-arrows"></i> Hovey-Tech Pairing Manager
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text" id="lastSaved"></span>
-            </div>
+    <div class="container">
+        <h1>Hovey Tech Pairing Manager</h1>
+        
+        <div class="input-section">
+            <h2>Enter Developer Names</h2>
+            <textarea id="developers" placeholder="Enter developer names, one per line. Example:
+Alice
+Bob
+Charlie
+Dana"></textarea>
+            <button onclick="pairProgrammers()">Generate Pairs</button>
+            <button onclick="addRandomPerson()">Add Random Person</button>
+            <button onclick="clearAll()">Clear All</button>
         </div>
-    </nav>
-
-    <div class="container mt-4">
-        <ul class="nav nav-tabs" id="mainTabs">
-            <li class="nav-item">
-                <a class="nav-link active" href="#participants" data-bs-toggle="tab">
-                    <i class="fas fa-users"></i> Participants
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#pairing" data-bs-toggle="tab">
-                    <i class="fas fa-random"></i> Pairing
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#history" data-bs-toggle="tab">
-                    <i class="fas fa-history"></i> History
-                </a>
-            </li>
-        </ul>
-
-        <div class="tab-content mt-3">
-            <!-- Participants Tab -->
-            <div class="tab-pane fade show active" id="participants">
-                <div class="row">
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-header bg-light">
-                                <h5><i class="fas fa-user-plus"></i> Add Participant</h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="participantForm">
-                                    <div class="mb-3">
-                                        <label class="form-label">Name *</label>
-                                        <input type="text" class="form-control" id="participantName" required 
-                                               placeholder="Enter full name">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="participantEmail" 
-                                               placeholder="optional@email.com">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Location</label>
-                                        <input type="text" class="form-control" id="participantLocation" 
-                                               placeholder="Office, City, etc.">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Role Preference</label>
-                                        <select class="form-select" id="participantCategory">
-                                            <option value="Both">Both (Can Coach or Be Coached)</option>
-                                            <option value="Coach Only">Coach Only</option>
-                                            <option value="Coachee Only">Coachee Only</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Do Not Pair With</label>
-                                        <select class="form-select" id="exclusionSelect" multiple size="3">
-                                            <!-- Options will be populated by JavaScript -->
-                                        </select>
-                                        <small class="text-muted">Hold Ctrl/Cmd to select multiple people</small>
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-save"></i> Save Participant
-                                        </button>
-                                        <button type="button" class="btn btn-secondary" onclick="clearParticipantForm()">
-                                            <i class="fas fa-times"></i> Clear Form
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        
-                        <!-- Quick Actions Card -->
-                        <div class="card mt-3">
-                            <div class="card-header bg-light">
-                                <h6><i class="fas fa-bolt"></i> Quick Actions</h6>
-                            </div>
-                            <div class="card-body">
-                                <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="importFromCSV()">
-                                    <i class="fas fa-file-import"></i> Import CSV
-                                </button>
-                                <button class="btn btn-outline-success btn-sm w-100 mb-2" onclick="exportToCSV()">
-                                    <i class="fas fa-file-export"></i> Export CSV
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm w-100" onclick="clearAllData()">
-                                    <i class="fas fa-trash"></i> Clear All Data
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-list"></i> Current Participants</h5>
-                                <span class="badge bg-primary" id="participantCount">0 participants</span>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover" id="participantsTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Email</th>
-                                                <th>Location</th>
-                                                <th>Role</th>
-                                                <th>Exclusions</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- Will be populated by JavaScript -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pairing Tab -->
-            <div class="tab-pane fade" id="pairing">
-                <div class="row">
-                    <div class="col-lg-3">
-                        <div class="card">
-                            <div class="card-header bg-light">
-                                <h5><i class="fas fa-cogs"></i> Configuration</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Location Preference</label>
-                                    <select class="form-select" id="locationPreference">
-                                        <option value="Ignore">Ignore Location</option>
-                                        <option value="Same">Prefer Same Location</option>
-                                        <option value="Different">Prefer Different Locations</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Session Name</label>
-                                    <input type="text" class="form-control" id="sessionName" 
-                                           value="Pairing Session">
-                                </div>
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="respectExclusions" checked>
-                                    <label class="form-check-label">Respect "Do Not Pair" restrictions</label>
-                                </div>
-                                <div class="d-grid">
-                                    <button class="btn btn-primary" onclick="generatePairings()">
-                                        <i class="fas fa-cogs"></i> Generate Pairings
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-9">
-                        <div class="card">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-list-ol"></i> Pairing Results</h5>
-                                <div id="pairingActions" style="display: none;">
-                                    <button class="btn btn-success btn-sm" onclick="savePairings()">
-                                        <i class="fas fa-save"></i> Save to History
-                                    </button>
-                                    <button class="btn btn-info btn-sm" onclick="exportPairingsCSV()">
-                                        <i class="fas fa-download"></i> Export CSV
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="pairingResults">
-                                    <p class="text-muted text-center py-5">
-                                        <i class="fas fa-random fa-3x mb-3"></i><br>
-                                        Configure settings and click "Generate Pairings" to see results here.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- History Tab -->
-            <div class="tab-pane fade" id="history">
-                <div class="card">
-                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-history"></i> Pairing History</h5>
-                        <button class="btn btn-outline-danger btn-sm" onclick="clearHistory()">
-                            <i class="fas fa-trash"></i> Clear History
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="historyContent">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
-                    </div>
-                </div>
-            </div>
+        
+        <div id="pairsContainer">
+            <!-- Pairs will be displayed here -->
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-light mt-5 py-3">
-        <div class="container text-center">
-            <small>Pairing Manager &copy; 2024 Hovey-Tech.com | Data is stored locally in your browser</small>
+    <div class="container history-section">
+        <h2>Pairing History (20+ Years Storage)</h2>
+        
+        <div class="history-controls">
+            <input type="date" id="startDate" placeholder="Start date">
+            <input type="date" id="endDate" placeholder="End date">
+            <button onclick="searchHistory()">Search Date Range</button>
+            <button onclick="showAllHistory()">Show All History</button>
+            <button onclick="showStatistics()">Show Statistics</button>
+            <button onclick="exportHistory()">Export History</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importHistory(this.files[0])">
+            <button onclick="document.getElementById('importFile').click()">Import History</button>
+            <button onclick="clearHistory()" style="background-color: #e74c3c;">Clear History</button>
         </div>
-    </footer>
+        
+        <div id="searchResults"></div>
+        <div id="pairingStatistics"></div>
+        <div id="pairingHistory" class="loading">
+            Loading history...
+        </div>
+    </div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/pairing.js"></script>
-    <script src="js/app.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
