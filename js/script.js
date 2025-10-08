@@ -788,8 +788,6 @@ function downloadCSVTemplate() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
-    return false; // This prevents the default link behavior
 }
 
 // Initialize when page loads
