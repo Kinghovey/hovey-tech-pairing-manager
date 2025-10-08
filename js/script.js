@@ -1,4 +1,4 @@
-// Enhanced Pairing Manager with 20+ Years History Storage
+// Enhanced Pairing Manager with 20+ Years History Storage and CSV Import
 class PairingHistoryManager {
     constructor() {
         this.history = {};
@@ -299,7 +299,7 @@ class PairingHistoryManager {
         this.showMessage('History exported successfully!', 'success');
     }
 
-    // Import history from file
+    // Import history from JSON file
     async importHistory(file) {
         if (!file) return;
         
@@ -315,6 +315,172 @@ class PairingHistoryManager {
         } catch (error) {
             this.showMessage('Error importing history: ' + error.message, 'error');
         }
+    }
+
+    // Import history from CSV file
+    async importCSV(file) {
+        if (!file) return;
+        
+        try {
+            const csvText = await this.readFileAsText(file);
+            const historicalData = this.parseCSVDataEnhanced(csvText);
+            
+            const beforeCount = this.countEntries(this.history);
+            this.history = this.mergeHistories(this.history, historicalData);
+            const afterCount = this.countEntries(this.history);
+            const importedCount = afterCount - beforeCount;
+            
+            await this.saveToStorage();
+            this.updateDisplay();
+            
+            const yearCount = Object.keys(historicalData).length;
+            
+            this.showMessage(
+                `Successfully imported ${importedCount} pairings from ${yearCount} years of CSV data!`, 
+                'success'
+            );
+            
+        } catch (error) {
+            this.showMessage('Error importing CSV: ' + error.message, 'error');
+            console.error('CSV Import Error:', error);
+        }
+    }
+
+    // Enhanced CSV parser
+    parseCSVDataEnhanced(csvText) {
+        const lines = csvText.split('\n').filter(line => {
+            const trimmed = line.trim();
+            return trimmed && !trimmed.startsWith('#');
+        });
+        
+        const history = {};
+        let hasHeader = false;
+        
+        // Check if first line is header
+        if (lines.length > 0) {
+            const firstLine = lines[0].toLowerCase();
+            hasHeader = firstLine.includes('date') && firstLine.includes('pair');
+        }
+        
+        const startLine = hasHeader ? 1 : 0;
+        
+        for (let i = startLine; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            try {
+                const columns = this.parseCSVLine(line);
+                if (columns.length < 2) continue;
+                
+                const dateStr = columns[0].trim();
+                const date = new Date(dateStr);
+                
+                if (isNaN(date.getTime())) {
+                    console.warn('Invalid date:', dateStr);
+                    continue;
+                }
+                
+                const pairs = [];
+                
+                // Process all pair columns
+                for (let j = 1; j < columns.length; j++) {
+                    const pairText = columns[j].trim();
+                    if (!pairText || pairText === '&' || pairText === 'and') continue;
+                    
+                    // Try multiple parsing strategies
+                    const pair = this.parsePair(pairText);
+                    if (pair && pair.length > 0) {
+                        pairs.push(pair);
+                    }
+                }
+                
+                if (pairs.length > 0) {
+                    this.addToHistory(history, date, pairs);
+                }
+                
+            } catch (error) {
+                console.warn('Error processing line:', line, error);
+            }
+        }
+        
+        return history;
+    }
+
+    // Helper to parse CSV lines (handles quotes and commas)
+    parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        result.push(current);
+        return result;
+    }
+
+    // Helper to parse individual pairs
+    parsePair(pairText) {
+        // Remove extra quotes
+        let cleanText = pairText.replace(/^["']|["']$/g, '');
+        
+        // Try different separators
+        const separators = [/[,&|]| and /, /\s+and\s+/, /\s*&\s*/, /\s*,\s*/];
+        
+        for (const separator of separators) {
+            const names = cleanText.split(separator)
+                .map(name => name.trim())
+                .filter(name => name.length > 0 && name !== '&' && name !== 'and');
+            
+            if (names.length >= 1) {
+                return names;
+            }
+        }
+        
+        // If no separator found, treat as single person
+        return [cleanText];
+    }
+
+    // Helper to add to history structure
+    addToHistory(history, date, pairs) {
+        const year = date.getFullYear();
+        const week = this.getWeekNumber(date);
+        const weekKey = `week-${week}`;
+        const dateStr = date.toISOString().split('T')[0];
+        
+        if (!history[year]) history[year] = {};
+        if (!history[year][weekKey]) history[year][weekKey] = [];
+        
+        const entry = {
+            date: dateStr,
+            timestamp: date.toISOString(),
+            pairs: pairs,
+            week: week,
+            totalPairs: pairs.length
+        };
+        
+        history[year][weekKey].push(entry);
+    }
+
+    // Helper to count total entries
+    countEntries(historyData) {
+        let count = 0;
+        Object.keys(historyData).forEach(year => {
+            Object.keys(historyData[year]).forEach(week => {
+                count += historyData[year][week].length;
+            });
+        });
+        return count;
     }
 
     // Read file as text
@@ -575,12 +741,53 @@ function exportHistory() {
     historyManager.exportHistory();
 }
 
+// File import handler
+function handleFileImport(file) {
+    if (!file) return;
+    
+    const extension = file.name.split('.').pop().toLowerCase();
+    
+    if (extension === 'csv') {
+        historyManager.importCSV(file);
+    } else if (extension === 'json') {
+        historyManager.importHistory(file);
+    } else {
+        historyManager.showMessage('Please select a CSV or JSON file', 'error');
+    }
+}
+
 function importHistory(file) {
     historyManager.importHistory(file);
 }
 
 function clearHistory() {
     historyManager.clearHistory();
+}
+
+// CSV template download
+function downloadCSVTemplate() {
+    const template = `Date,Pair1,Pair2,Pair3,Pair4
+2020-01-06,Alice & Bob,Charlie & Dana
+2020-01-13,Alice & Charlie,Bob & Dana
+2020-01-20,Alice & Dana,Bob & Charlie
+2021-05-10,Developer1 & Developer2,Developer3 & Developer4
+2022-11-15,Team Member A & Team Member B
+
+# Format:
+# - First column: Date (YYYY-MM-DD)
+# - Subsequent columns: Pairs (use " & " between names)
+# - Multiple pairs go in separate columns
+# - Empty lines and lines starting with # are ignored`;
+
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'pairing-history-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
 // Initialize when page loads
