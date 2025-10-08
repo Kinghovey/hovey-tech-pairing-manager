@@ -193,6 +193,25 @@
             border-radius: 5px;
             margin: 10px 0;
         }
+        
+        .csv-help {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .csv-help a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .csv-help a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -226,9 +245,22 @@ Dana"></textarea>
             <button onclick="showAllHistory()">Show All History</button>
             <button onclick="showStatistics()">Show Statistics</button>
             <button onclick="exportHistory()">Export History</button>
-            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importHistory(this.files[0])">
-            <button onclick="document.getElementById('importFile').click()">Import History</button>
+            
+            <!-- Updated Import Section -->
+            <div style="display: inline-block; position: relative;">
+                <button onclick="document.getElementById('importFile').click()">Import History</button>
+                <input type="file" id="importFile" accept=".json,.csv" style="display: none;" onchange="handleFileImport(this.files[0])">
+            </div>
+            
             <button onclick="clearHistory()" style="background-color: #e74c3c;">Clear History</button>
+        </div>
+        
+        <!-- CSV Help Section -->
+        <div class="csv-help">
+            <strong>CSV Import Supported!</strong><br>
+            <strong>Format:</strong> Date,Pair1,Pair2,...<br>
+            <strong>Example:</strong> 2020-01-06,Alice & Bob,Charlie & Dana<br>
+            <strong>Download Template:</strong> <a href="#" onclick="downloadCSVTemplate()">CSV Template</a>
         </div>
         
         <div id="searchResults"></div>
